@@ -62,10 +62,10 @@
 
 CCDigestRef digestRef_from_name(const char* name, unsigned int *outHashSize) {
     CCDigestRef result = NULL;
-    
+
     if (NULL != outHashSize)
         *outHashSize = 0;
-    
+
 	if (0 == strcasecmp(name, "sha512")) {
         result = CCDigestCreate(kCCDigestSHA512);
         if (NULL != outHashSize)
@@ -85,7 +85,7 @@ CCDigestRef digestRef_from_name(const char* name, unsigned int *outHashSize) {
             *outHashSize = CC_MD5_DIGEST_LENGTH;
 #endif // XAR_SUPPORT_MD5
     }
-	
+
     return result;
 }
 #endif // __APPLE__
@@ -97,7 +97,7 @@ struct __xar_hash_t {
 #ifdef __APPLE__
 	CCDigestRef digest;
 #else
-	EVP_MD_CTX digest;
+	EVP_MD_CTX *digest;
 	const EVP_MD *type;
 #endif
 	unsigned int length;
@@ -109,20 +109,20 @@ xar_hash_t xar_hash_new(const char *digest_name, void *context) {
 	struct __xar_hash_t *hash = calloc(1, sizeof(struct __xar_hash_t));
 	if( ! hash )
 		return NULL; // errno will already be set
-	
+
 	if( context )
 		HASH_CTX(hash)->context = context;
-	
+
 #ifdef __APPLE__
 	HASH_CTX(hash)->digest = digestRef_from_name(digest_name, &HASH_CTX(hash)->length);
 #else
 	OpenSSL_add_all_digests();
 	HASH_CTX(hash)->type = EVP_get_digestbyname(digest_name);
-	EVP_DigestInit(&HASH_CTX(hash)->digest, HASH_CTX(hash)->type);
+	EVP_DigestInit(HASH_CTX(hash)->digest, HASH_CTX(hash)->type);
 #endif
-	
+
 	HASH_CTX(hash)->digest_name = strdup(digest_name);
-	
+
 	return hash;
 }
 
@@ -138,7 +138,7 @@ void xar_hash_update(xar_hash_t hash, void *buffer, size_t nbyte) {
 #ifdef __APPLE__
 	CCDigestUpdate(HASH_CTX(hash)->digest, buffer, nbyte);
 #else
-	EVP_DigestUpdate(&HASH_CTX(hash)->digest, buffer, nbyte);
+	EVP_DigestUpdate(HASH_CTX(hash)->digest, buffer, nbyte);
 #endif
 }
 
@@ -150,14 +150,14 @@ void *xar_hash_finish(xar_hash_t hash, size_t *nbyte) {
 #endif
 	if( ! buffer )
 		return NULL;
-	
+
 #ifdef __APPLE__
 	CCDigestFinal(HASH_CTX(hash)->digest, buffer);
 	CCDigestDestroy(HASH_CTX(hash)->digest);
 #else
-	EVP_DigestFinal(&HASH_CTX(hash)->digest, buffer, &HASH_CTX(hash)->length);
+	EVP_DigestFinal(HASH_CTX(hash)->digest, buffer, &HASH_CTX(hash)->length);
 #endif
-	
+
 	*nbyte = HASH_CTX(hash)->length;
 	free((void *)HASH_CTX(hash)->digest_name);
 	free((void *)hash);
@@ -181,14 +181,14 @@ static char *_xar_format_hash(const unsigned char* m,unsigned int len) {
 	char *result = malloc((2*len)+1);
 	char hexValue[3];
 	unsigned int itr = 0;
-	
+
 	result[0] = '\0';
-	
+
 	for(itr = 0;itr < len;itr++) {
 		sprintf(hexValue,"%02x",m[itr]);
 		strncat(result,hexValue,2);
 	}
-	
+
 	return result;
 }
 
@@ -197,10 +197,10 @@ int32_t xar_hash_toheap_in(xar_t x, xar_file_t f, xar_prop_t p, void **in, size_
 }
 
 int32_t xar_hash_fromheap_out(xar_t x, xar_file_t f, xar_prop_t p, void *in, size_t inlen, void **context) {
-	
+
 	if (!context)
 		return 0;
-	
+
 	if(!CONTEXT(context) || (! CONTEXT(context)->unarchived) ) {
 		const char *opt;
 		xar_prop_t tmpp;
@@ -230,34 +230,34 @@ int32_t xar_hash_fromheap_out(xar_t x, xar_file_t f, xar_prop_t p, void *in, siz
 
 		if( !opt )
 			opt = xar_opt_get(x, XAR_OPT_FILECKSUM);
-		
+
 		if( !opt || (0 == strcmp(opt, XAR_OPT_VAL_NONE) ) )
 			return 0;
-		
-		
+
+
 		if (!CONTEXT(context)) {
 			*context = calloc(1, sizeof(struct _hash_context));
 			if( ! *context )
 				return -1;
 		}
-		
+
 		if( ! CONTEXT(context)->unarchived ) {
 			CONTEXT(context)->unarchived = xar_hash_new(opt, NULL);
 			if( ! CONTEXT(context)->unarchived ) {
 				free(*context);
 				*context = NULL;
 				return -1;
-				
+
 			}
 		}
 	}
-	
+
 	if( inlen == 0 )
 		return 0;
-	
+
 	CONTEXT(context)->count += inlen;
 	xar_hash_update(CONTEXT(context)->unarchived, in, inlen);
-	
+
 	return 0;
 }
 
@@ -268,24 +268,24 @@ int32_t xar_hash_fromheap_in(xar_t x, xar_file_t f, xar_prop_t p, void **in, siz
 int32_t xar_hash_toheap_out(xar_t x, xar_file_t f, xar_prop_t p, void *in, size_t inlen, void **context) {
 	const char *opt;
 	xar_prop_t tmpp;
-	
+
 	opt = NULL;
 	tmpp = xar_prop_pget(p, "archived-checksum");
 	if( tmpp )
 		opt = xar_attr_pget(f, tmpp, "style");
-	
-	if( !opt ) 	
+
+	if( !opt )
 		opt = xar_opt_get(x, XAR_OPT_FILECKSUM);
-	
+
 	if( !opt || (0 == strcmp(opt, XAR_OPT_VAL_NONE) ) )
 		return 0;
-		
+
 	if( ! CONTEXT(context) ) {
 		*context = calloc(1, sizeof(struct _hash_context));
 		if( ! *context )
 			return -1;
 	}
-	
+
 	if( ! CONTEXT(context)->archived ) {
 		CONTEXT(context)->archived = xar_hash_new(opt, NULL);
 		if( ! CONTEXT(context)->archived ) {
@@ -294,10 +294,10 @@ int32_t xar_hash_toheap_out(xar_t x, xar_file_t f, xar_prop_t p, void *in, size_
 			return -1;
 		}
 	}
-	
+
 	if( inlen == 0 )
 		return 0;
-	
+
 	CONTEXT(context)->count += inlen;
 	xar_hash_update(CONTEXT(context)->archived, in, inlen);
 	return 0;
@@ -307,20 +307,20 @@ int32_t xar_hash_toheap_done(xar_t x, xar_file_t f, xar_prop_t p, void **context
 	const char *archived_style = NULL, *unarchived_style = NULL;
 	size_t archived_length = -1, unarchived_length = -1;
 	void *archived_hash = NULL, *unarchived_hash = NULL;
-	
+
 	if( ! CONTEXT(context) )
 		return 0;
 	else if( CONTEXT(context)->count == 0 )
 		goto DONE;
-	
+
 	archived_style = strdup(xar_hash_get_digest_name(CONTEXT(context)->archived));
 	unarchived_style = strdup(xar_hash_get_digest_name(CONTEXT(context)->unarchived));
-	
+
 	archived_hash = xar_hash_finish(CONTEXT(context)->archived, &archived_length);
 	unarchived_hash = xar_hash_finish(CONTEXT(context)->unarchived, &unarchived_length);
 	CONTEXT(context)->archived = NULL;
 	CONTEXT(context)->unarchived = NULL;
-	
+
 	char *str;
 	xar_prop_t tmpp;
 
@@ -331,7 +331,7 @@ int32_t xar_hash_toheap_done(xar_t x, xar_file_t f, xar_prop_t p, void **context
 			xar_attr_pset(f, tmpp, "style", archived_style);
 	}
 	free(str);
-		
+
 	str = _xar_format_hash(unarchived_hash, unarchived_length);
 	if( f ) {
 		tmpp = xar_prop_pset(f, p, "extracted-checksum", str);
@@ -339,14 +339,14 @@ int32_t xar_hash_toheap_done(xar_t x, xar_file_t f, xar_prop_t p, void **context
 			xar_attr_pset(f, tmpp, "style", unarchived_style);
 	}
 	free(str);
-	
+
 DONE:
 	free((void *)archived_style);
 	free((void *)unarchived_style);
-	
+
 	free(archived_hash);
 	free(unarchived_hash);
-	
+
 	free(*context);
 	*context = NULL;
 
@@ -356,10 +356,10 @@ DONE:
 int32_t xar_hash_fromheap_done(xar_t x, xar_file_t f, xar_prop_t p, void **context) {
 	if(!CONTEXT(context))
 		return 0;
-	
+
 	int32_t result = 0;
     const char *archived_hash = NULL, *archived_style = NULL;
-	
+
 	// Fetch the existing hash from the archive
 	if( CONTEXT(context)->archived ) {
 		xar_prop_t tmpp = xar_prop_pget(p, "archived-checksum");
@@ -367,7 +367,7 @@ int32_t xar_hash_fromheap_done(xar_t x, xar_file_t f, xar_prop_t p, void **conte
 			archived_style = xar_attr_pget(f, tmpp, "style");
 			archived_hash = xar_prop_getvalue(tmpp);
 		}
-		
+
 		// We have the fetched hash; now get the calculated hash
 		if( archived_hash && archived_style ) {
 			size_t calculated_length = -1;
@@ -376,11 +376,11 @@ int32_t xar_hash_fromheap_done(xar_t x, xar_file_t f, xar_prop_t p, void **conte
 			CONTEXT(context)->archived = NULL;
 			char *calculated_hash = _xar_format_hash(calculated_buffer, calculated_length);
 			free(calculated_buffer);
-			
+
 			// Compare
 			int hash_match = ( strcmp(archived_hash, calculated_hash) == 0 );
 			int style_match = (strcmp(archived_style, calculated_style) == 0 );
-			
+
 			if( ! hash_match || ! style_match ) {
 				xar_err_new(x);
 				xar_err_set_file(x, f);
@@ -388,12 +388,12 @@ int32_t xar_hash_fromheap_done(xar_t x, xar_file_t f, xar_prop_t p, void **conte
 				xar_err_callback(x, XAR_SEVERITY_FATAL, XAR_ERR_ARCHIVE_EXTRACTION);
 				result = -1;
 			}
-			
+
 			free((void *)calculated_style);
 			free(calculated_hash);
 		}
 	}
-	
+
 	// Clean up the unarchived hash as well, if we have one
 	if( CONTEXT(context)->unarchived ) {
 		size_t length = -1;

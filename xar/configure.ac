@@ -14,9 +14,9 @@ AC_SUBST([XAR_MAJOR_VERSION])
 AC_SUBST([XAR_MINOR_VERSION])
 AC_SUBST([XAR_VERSION])
 
-dnl 
+dnl
 dnl Various paths.
-dnl 
+dnl
 srcroot=$srcdir
 if test "x${srcroot}" = "x." ; then
   srcroot=""
@@ -114,7 +114,7 @@ test "$shared" = "yes" || test "$static" = "yes"
 dnl Platform-specific settings.  abi and RPATH can probably be determined
 dnl programmatically, but doing so is error-prone, which makes it generally
 dnl not worth the trouble.
-dnl 
+dnl
 dnl Define cpp macros in CPPFLAGS, rather than doing AC_DEFINE(macro), since the
 dnl definitions need to be seen before and headers are included, which is a pain
 dnl to make happen otherwise.
@@ -181,7 +181,7 @@ fi
 )
 AC_SUBST([enable_autogen])
 
-AC_TRY_COMPILE([#include <sys/types.h> 
+AC_TRY_COMPILE([#include <sys/types.h>
 #include <sys/acl.h>], [acl_t a], [AC_DEFINE([HAVE_SYS_ACL_H],[1], [define if you have sys/acl.h and it has a working acl_t type])])
 AC_CHECK_HEADERS(ext2fs/ext2_fs.h sys/statfs.h sys/xattr.h sys/param.h sys/extattr.h libutil.h)
 AC_CHECK_FUNCS(lgetxattr)
@@ -258,9 +258,9 @@ AC_PREFIX_DEFAULT(/usr/local)
 
 AC_CHECK_FUNC([asprintf], AC_DEFINE([HAVE_ASPRINTF]))
 
-dnl 
+dnl
 dnl Configure libxml2.
-dnl 
+dnl
 LIBXML2_VERSION_MIN=2.6.11
 
 have_libxml2="1"
@@ -319,19 +319,19 @@ if test "x${have_libxml2}" = "x0" ; then
   AC_MSG_ERROR([Cannot build without libxml2])
 fi
 
-dnl 
+dnl
 dnl Configure libcrypto (part of OpenSSL).
-dnl 
+dnl
 have_libcrypto="1"
 AC_CHECK_HEADERS([openssl/evp.h], , [have_libcrypto="0"])
-AC_CHECK_LIB([crypto], [OpenSSL_add_all_ciphers], , [have_libcrypto="0"])
+AC_CHECK_LIB([crypto], [OPENSSL_init_crypto], , [have_libcrypto="0"])
 if test "x${have_libcrypto}" = "x0" ; then
   AC_MSG_ERROR([Cannot build without libcrypto (OpenSSL)])
 fi
 
-dnl 
+dnl
 dnl Configure libz.
-dnl 
+dnl
 have_libz="1"
 AC_CHECK_HEADERS([zlib.h], , [have_libz="0"])
 AC_CHECK_LIB([z], [deflate], , [have_libz="0"])
@@ -339,9 +339,9 @@ if test "x${have_libz}" = "x0" ; then
   AC_MSG_ERROR([Cannot build without libz])
 fi
 
-dnl 
+dnl
 dnl Configure libbz2.
-dnl 
+dnl
 have_libbz2="1"
 AC_CHECK_HEADERS([bzlib.h], , [have_libbz2="0"])
 AC_CHECK_LIB([bz2], [BZ2_bzCompress], , [have_libbz2="0"])
@@ -349,9 +349,9 @@ if test "x${have_libbz2}" = "x1" ; then
   AC_DEFINE([HAVE_LIBBZ2])
 fi
 
-dnl 
+dnl
 dnl Configure libpthread.
-dnl 
+dnl
 have_libpthread="1"
 AC_CHECK_HEADERS([pthread.h], , [have_libpthread="0"])
 AC_CHECK_LIB([pthread], [pthread_mutex_lock], , [have_libpthread="0"])
@@ -359,9 +359,9 @@ if test "x${have_libpthread}" = "x1" ; then
   AC_DEFINE([HAVE_LIBPTHREAD])
 fi
 
-dnl 
+dnl
 dnl Process .in files.
-dnl 
+dnl
 AC_SUBST([cfghdrs])
 AC_CONFIG_HEADER([$cfghdrs])
 
@@ -369,4 +369,3 @@ AC_SUBST([cfgoutputs])
 AC_CONFIG_FILES([$cfgoutputs])
 
 AC_OUTPUT
-

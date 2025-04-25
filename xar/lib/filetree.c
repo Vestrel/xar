@@ -185,12 +185,12 @@ int xar_attr_equals_attr_ignoring_keys(xar_attr_t a1, xar_attr_t a2, uint64_t ke
 	int result = 0;
 	xar_attr_t iter1 = a1;
 	xar_attr_t iter2 = a2;
-	
+
 	if (a1 == a2) { // These are pointers, if they're the same pointer, well, duh, they're the same. Short cut.
 		result = 1;
 		goto exit;
 	}
-	
+
 	while (iter1 && iter2)
 	{
 		size_t key1_size = 0, key2_size = 0;
@@ -198,15 +198,15 @@ int xar_attr_equals_attr_ignoring_keys(xar_attr_t a1, xar_attr_t a2, uint64_t ke
 		size_t ns1_size = 0, ns2_size = 0;
 		int do_case_insenstive = (strcmp(iter1->key, "name") == 0) ? 1 : 0;
 		int ignore_compare = 0;
-		
+
 		// Check the key
 		key1_size = iter1->key ? strlen(iter1->key) : 0;
 		key2_size = iter2->key ? strlen(iter2->key) : 0;
-		
+
 		if ((key1_size != key2_size) || (strncmp(iter1->key, iter2->key, key1_size) != 0)) {
 			goto exit;
 		}
-		
+
 		for (uint64_t index = 0; index < key_count; ++index) {
 			size_t ignore_key_size = strlen(keys_to_ignore[index]);
 			if (ignore_key_size == key1_size && strncmp(iter1->key, keys_to_ignore[index], ignore_key_size) == 0) {
@@ -214,14 +214,14 @@ int xar_attr_equals_attr_ignoring_keys(xar_attr_t a1, xar_attr_t a2, uint64_t ke
 				break;
 			}
 		}
-		
+
 		// If we're not ignoring the compare.
 		if (!ignore_compare) {
-				
+
 			// Check the value vlaue
 			value1_size = iter1->value ? strlen(iter1->value) : 0;
 			value2_size = iter2->value ? strlen(iter2->value) : 0;
-			
+
 			if (!do_case_insenstive) {
 				if ((value1_size != value2_size) || (strncmp(iter1->value, iter2->value, value1_size) != 0)) {
 					goto exit;
@@ -231,30 +231,30 @@ int xar_attr_equals_attr_ignoring_keys(xar_attr_t a1, xar_attr_t a2, uint64_t ke
 					goto exit;
 				}
 			}
-			
+
 			// Check prefix paths
 			ns1_size = iter1->ns ? strlen(iter1->ns) : 0;
 			ns2_size = iter2->ns ? strlen(iter2->ns) : 0;
-			
+
 			if ((ns1_size != ns2_size) || (strncasecmp(iter1->ns, iter2->ns, ns1_size) != 0)) {
 				goto exit;
 			}
-			
+
 		}
-		
+
 		iter1 = iter1->next;
 		iter2 = iter2->next;
 	}
-	
+
 	// Incomplete iteration is not a match.
 	if (iter1 || iter2) {
 		goto exit;
 	}
-	
+
 	result = 1;
 
 exit:
-	
+
 	return result;
 }
 
@@ -461,7 +461,7 @@ SUCCESS:
 /* xar_prop_new
  * f: file to associate the new file with.  May not be NULL
  * parent: the parent property of the new property.  May be NULL
- * Returns: a newly allocated and initialized property.  
+ * Returns: a newly allocated and initialized property.
  * Summary: in addition to allocating the new property, it
  * will be inserted into the parent node's list of children,
  * and/or added to the file's list of properties, as appropriate.
@@ -508,9 +508,9 @@ xar_prop_t xar_prop_new(xar_file_t f, xar_prop_t parent) {
  * p: property to check
  * key: name of property to find.
  * Returns: reference to the property with the specified key
- * Summary: A node's name may be specified by a path, such as 
- * "a1/b1/c1", and child nodes will be searched for each 
- * "/" separator.  
+ * Summary: A node's name may be specified by a path, such as
+ * "a1/b1/c1", and child nodes will be searched for each
+ * "/" separator.
  */
 xar_prop_t xar_prop_find(xar_prop_t p, const char *key) {
 	xar_prop_t i, ret;
@@ -556,7 +556,7 @@ static xar_prop_t xar_prop_set_r(xar_file_t f, xar_prop_t p, const char *key, co
 	} else {
 		start = XAR_PROP(p)->children;
 	}
-	
+
 	for( i = start; i; i = XAR_PROP(i)->next ) {
 		if( strcmp(tmp3, XAR_PROP(i)->key) == 0 ) {
 			if( !tmp2 ) {
@@ -653,9 +653,9 @@ int32_t xar_prop_create(xar_file_t f, const char *key, const char *value) {
  * value may be NULL, in which case, only the existence of the property
  * is tested.
  * Returns: 0 for success, -1 on failure
- * Summary: A node's name may be specified by a path, such as 
- * "a1/b1/c1", and child nodes will be searched for each 
- * "/" separator.  
+ * Summary: A node's name may be specified by a path, such as
+ * "a1/b1/c1", and child nodes will be searched for each
+ * "/" separator.
  */
 int32_t xar_prop_get(xar_file_t f, const char *key, const char **value) {
 	xar_prop_t r = xar_prop_find(XAR_FILE(f)->props, key);
@@ -672,7 +672,7 @@ int32_t xar_prop_get(xar_file_t f, const char *key, const char **value) {
 int32_t xar_prop_get_expect_notnull(xar_file_t f, const char *key, const char **value)
 {
 	int result = xar_prop_get(f, key, value);
-	
+
 	// If we succeeded and the value is being returned and it's NULL. FAIL
 	if (result == 0 && value && (*value == NULL)) {
 		return -1;
@@ -702,39 +702,39 @@ xar_prop_t xar_prop_pget(xar_prop_t p, const char *key) {
 void xar_prop_replicate_r(xar_file_t f, xar_prop_t p, xar_prop_t parent )
 {
 	xar_prop_t property = p;
-	
+
 	/* look through properties */
 	for( property = p; property; property = property->next ){
 		xar_prop_t	newprop = xar_prop_new( f, parent );
-		
+
 		/* copy the key value for the property */
 		XAR_PROP(newprop)->key = strdup(property->key);
 		if(property->value)
 			XAR_PROP(newprop)->value = strdup(property->value);
-		
+
 		/* loop through the attributes and copy them */
 		xar_attr_t a = NULL;
 		xar_attr_t last = NULL;
-		
+
 		/* copy attributes for file */
-		for(a = property->attrs; a; a = a->next) {			
+		for(a = property->attrs; a; a = a->next) {
 			if( NULL == newprop->attrs ){
 				last = xar_attr_new();
-				XAR_PROP(newprop)->attrs = last;				
+				XAR_PROP(newprop)->attrs = last;
 			}else{
 				XAR_ATTR(last)->next = xar_attr_new();
 				last = XAR_ATTR(last)->next;
 			}
-			
+
 			XAR_ATTR(last)->key = strdup(a->key);
 			if(a->value)
 				XAR_ATTR(last)->value = strdup(a->value);
 		}
-		
+
 		/* loop through the children properties and recursively add them */
-		xar_prop_replicate_r(f, property->children, newprop );		
+		xar_prop_replicate_r(f, property->children, newprop );
 	}
-	
+
 }
 
 /*
@@ -753,33 +753,33 @@ int xar_file_equals_file(xar_file_t f1, xar_file_t f2)
 	size_t ns1_size = 0, ns2_size = 0;
 	const struct __xar_file_t * child1 = NULL, * child2 = NULL;
 	const uint keys_to_ignore_count = 1;
-	char * keys_to_ignore[keys_to_ignore_count] = { "id" }; // ID is allowed ot mismatch
-	
+	char * keys_to_ignore[1] = { "id" }; // ID is allowed ot mismatch
+
 	// If the two pointers match, call it the same.
 	if (f1 == f2)  {
 		result = 1;
 		goto exit;
 	}
-	
+
 	// Check filename - this will get done in the prop equalizer, but it's a HUGE short circuit.
 	xar_prop_get(f1, "name", &f1_name);
 	xar_prop_get(f2, "name", &f2_name);
-	
+
 	f1_name_size = f1_name ? strlen(f1_name) : 0;
 	f2_name_size = f2_name ? strlen(f2_name) : 0;
-	
+
 	if ((f1_name_size != f2_name_size) || (strncasecmp(f1_name, f2_name, f1_name_size) != 0)) {
 		goto exit;
 	}
-		
+
 	// Check prefix paths
 	prefix1_size = f1->prefix ? strlen(f1->prefix) : 0;
 	prefix2_size = f2->prefix ? strlen(f2->prefix) : 0;
-	
+
 	if ((prefix1_size != prefix2_size) || (strncasecmp(f1->prefix, f2->prefix, prefix1_size) != 0)) {
 		goto exit;
 	}
-	
+
 	// Check where we think they should go.
 	fspath1_size = f1->fspath ? strlen(f1->fspath) : 0;
 	fspath2_size = f2->fspath ? strlen(f2->fspath) : 0;
@@ -797,7 +797,7 @@ int xar_file_equals_file(xar_file_t f1, xar_file_t f2)
 	if (xar_attr_equals_attr_ignoring_keys(f1->attrs, f2->attrs, keys_to_ignore_count, keys_to_ignore) == 0) {
 		goto exit;
 	}
-	
+
 	// Check namespace
 	ns1_size = f1->ns ? strlen(f1->ns) : 0;
 	ns2_size = f2->ns ? strlen(f2->ns) : 0;
@@ -805,7 +805,7 @@ int xar_file_equals_file(xar_file_t f1, xar_file_t f2)
 	if ((ns1_size != ns2_size) || strncasecmp(f1->ns, f2->ns, ns1_size) != 0) {
 		goto exit;
 	}
-	
+
 	// Compare children.
 	// If you were dumb enough to do this. I'm going to assume your FS enumerates the directory in the same order
 	// I am NOT going to attempt to deal with children being out of order.
@@ -816,16 +816,16 @@ int xar_file_equals_file(xar_file_t f1, xar_file_t f2)
 		if (xar_file_equals_file(child1, child2) != 0) {
 			goto exit;
 		}
-		
+
 		child1 = child1->next;
 		child2 = child2->next;
 	}
-	
+
 	// Incomplete iteration of children, that means they don't match, one is longer than the other.
 	if (child1 || child2) {
 		goto exit;
 	}
-	
+
 	result = 1;
 
 exit:
@@ -855,15 +855,15 @@ void xar_prop_free(xar_prop_t p) {
 	if (XAR_PROP(p)->key) {
 		free((char*)XAR_PROP(p)->key);
 	}
-	
+
 	if (XAR_PROP(p)->value) {
 		free((char*)XAR_PROP(p)->value);
 	}
-	
+
 	if (XAR_PROP(p)->prefix) {
 		free((char*)XAR_PROP(p)->prefix);
 	}
-	
+
 	free(XAR_PROP(p));
 }
 
@@ -910,7 +910,7 @@ int xar_prop_equals_prop(xar_prop_t prop1, xar_prop_t prop2)
 	int result = 0;
 	xar_prop_t iter1 = prop1;
 	xar_prop_t iter2 = prop2;
-	
+
 	while (iter1 && iter2)
 	{
 		size_t key1_size = 0, key2_size = 0;
@@ -918,19 +918,19 @@ int xar_prop_equals_prop(xar_prop_t prop1, xar_prop_t prop2)
 		size_t prefix1_size = 0, prefix2_size = 0;
 		size_t ns1_size = 0, ns2_size = 0;
 		int do_case_insenstive = (strcmp(iter1->key, "name") == 0) ? 1 : 0;
-		
+
 		// Check the key
 		key1_size = iter1->key ? strlen(iter1->key) : 0;
 		key2_size = iter2->key ? strlen(iter2->key) : 0;
-		
+
 		if ((key1_size != key2_size) || (strncmp(iter1->key, iter2->key, key1_size) != 0)) {
 			goto exit;
 		}
-		
+
 		// Check the value vlaue
 		value1_size = iter1->value ? strlen(iter1->value) : 0;
 		value2_size = iter2->value ? strlen(iter2->value) : 0;
-		
+
 		if (!do_case_insenstive) {
 			if ((value1_size != value2_size) || (strncmp(iter1->value, iter2->value, value1_size) != 0)) {
 				goto exit;
@@ -940,33 +940,33 @@ int xar_prop_equals_prop(xar_prop_t prop1, xar_prop_t prop2)
 				goto exit;
 			}
 		}
-		
+
 		// Check prefix paths
 		prefix1_size = iter1->prefix ? strlen(iter1->prefix) : 0;
 		prefix2_size = iter2->prefix ? strlen(iter2->prefix) : 0;
-		
+
 		if ((prefix1_size != prefix2_size) || (strncasecmp(iter1->prefix, iter2->prefix, prefix1_size) != 0)) {
 			goto exit;
 		}
-		
+
 		// Check prefix paths
 		ns1_size = iter1->ns ? strlen(iter1->ns) : 0;
 		ns2_size = iter2->ns ? strlen(iter2->ns) : 0;
-		
+
 		if ((ns1_size != ns2_size) || (strncasecmp(iter1->ns, iter2->ns, ns1_size) != 0)) {
 			goto exit;
 		}
-		
+
 		// Check our attr.
 		if (xar_attr_equals_attr(iter1->attrs, iter2->attrs)) {
 			goto exit;
 		}
-		
+
 		// Checkout children
 		if (xar_prop_equals_prop(iter1->children, iter2->children) == 0) {
 			goto exit;
 		}
-		
+
 		iter1 = iter1->next;
 		iter2 = iter2->next;
 	}
@@ -977,16 +977,16 @@ int xar_prop_equals_prop(xar_prop_t prop1, xar_prop_t prop2)
 	}
 
 	result = 1;
-	
+
 exit:
-	
+
 	return result;
 }
 
 
 int xar_file_name_cmp(xar_file_t f, const char *name) {
 	int result = -1;
-	
+
 	char *lower_name = xar_lowercase_string(name);
 	if (lower_name) {
 		const char *cur_name = NULL;
@@ -1023,19 +1023,19 @@ xar_file_t xar_file_new_from_parent(xar_file_t parent, const char *name) {
 	XAR_FILE(ret)->fspath = NULL;
 	XAR_FILE(ret)->eas = NULL;
 	XAR_FILE(ret)->nexteaid = 0;
-	
+
 	// Add the name
 	if (name) {
 		xar_prop_set(ret, "name", name);
 	}
-	
+
 	if( parent ) {
 		if( !XAR_FILE(parent)->children ) {
 			XAR_FILE(parent)->children = ret;
 		} else {
 			// i = current, p = previous
 			xar_file_t i, p = NULL;
-			
+
 			// Iterate and set i to the end of the list, so we can insert our new file.
 			for (i = XAR_FILE(parent)->children; i != NULL; p = i, i = XAR_FILE(i)->next)
 			{
@@ -1060,7 +1060,7 @@ xar_file_t xar_file_new_from_parent(xar_file_t parent, const char *name) {
 					}
 				}
 			}
-			
+
 			// The previous file we looked at is the last file in the list.
 			// So let's add our new file at the end.
 			XAR_FILE(p)->next = ret;
@@ -1078,19 +1078,19 @@ xar_file_t xar_file_replicate(xar_file_t original, xar_file_t newparent)
 {
 	const char *file_name = NULL;
 	xar_prop_get(original, "name", &file_name);
-	
+
 	xar_file_t ret = xar_file_new_from_parent(newparent, file_name);
 	xar_attr_t a;
-	
+
 	/* copy attributes for file */
 	for(a = XAR_FILE(original)->attrs; a; a = XAR_ATTR(a)->next) {
 		/* skip the id attribute */
 		if( 0 == strcmp(a->key, "id" ) )
 			continue;
-		
+
 		xar_attr_set(ret, NULL , a->key, a->value );
 	}
-		
+
 	/* recursively copy properties */
 	xar_prop_replicate_r(ret, XAR_FILE(original)->props, NULL);
 
@@ -1122,11 +1122,11 @@ void xar_file_free(xar_file_t f) {
 		xar_attr_free(a);
 	}
 	XAR_FILE(f)->next = NULL;
-	
+
 	if (XAR_FILE(f)->prefix) {
 		free((char *)XAR_FILE(f)->prefix);
 	}
-	
+
 	free((char *)XAR_FILE(f)->fspath);
 	free(XAR_FILE(f));
 }
@@ -1151,10 +1151,10 @@ xar_file_t xar_file_first(xar_t x, xar_iter_t i) {
  * i: iterator allocated by xar_iter_new, and initialized with xar_file_first
  * Returns: a pointer to the name of the next file associated with
  * the iterator.  NULL will be returned when there are no more files
- * to find.  
- * This will recurse down child files (directories), flattening the 
- * namespace and adding separators.  For instance a1->b1->c1, a1 will 
- * first be returned, the subsequent call will return "a1/b1", and the 
+ * to find.
+ * This will recurse down child files (directories), flattening the
+ * namespace and adding separators.  For instance a1->b1->c1, a1 will
+ * first be returned, the subsequent call will return "a1/b1", and the
  * next call will return "a1/b1/c1", etc.
  */
 xar_file_t xar_file_next(xar_iter_t i) {
@@ -1239,17 +1239,17 @@ int xar_prop_serializable(xar_prop_t p)
 {
 	if( !p )
 		return -1;
-	
+
 	xar_prop_t i = p;
 	do {
-		
+
 		// Verify that the filename is valid and not unsafe.
 		// If it's unsafe we'll skip serializing this prop.
 		if( XAR_PROP(i)->value ) {
 			if( strcmp(XAR_PROP(i)->key, "name") == 0 ) {
 				const char* unsafe_value = XAR_PROP(i)->value;
 				char* value = NULL;
-				
+
 				if (xar_is_safe_filename(unsafe_value, &value) < 0)
 				{
 					fprintf(stderr, "xar_prop_serializable failed because %s is not a valid filename.\n", unsafe_value);
@@ -1259,10 +1259,10 @@ int xar_prop_serializable(xar_prop_t p)
 				free(value);
 			}
 		}
-		
+
 		i = XAR_PROP(i)->next;
 	} while(i);
-	
+
 	return 0;
 }
 
@@ -1285,7 +1285,7 @@ void xar_prop_serialize(xar_prop_t p, xmlTextWriterPtr writer) {
 			i = XAR_PROP(i)->next;
 			continue;
 		}
-		
+
 		if( XAR_PROP(i)->prefix || XAR_PROP(i)->ns )
 			xmlTextWriterStartElementNS(writer, BAD_CAST(XAR_PROP(i)->prefix), BAD_CAST(XAR_PROP(i)->key), NULL);
 		else
@@ -1297,7 +1297,7 @@ void xar_prop_serialize(xar_prop_t p, xmlTextWriterPtr writer) {
 			if( strcmp(XAR_PROP(i)->key, "name") == 0 ) {
 				unsigned char *tmp;
 				const char* value = XAR_PROP(i)->value;
-				
+
 				int outlen = strlen(value);
 				int inlen, len;
 
@@ -1344,7 +1344,7 @@ void xar_file_serialize(xar_file_t f, xmlTextWriterPtr writer) {
 			i = XAR_FILE(i)->next;
 			continue;
 		}
-		
+
 		xmlTextWriterStartElement(writer, BAD_CAST("file"));
 		for(a = XAR_FILE(i)->attrs; a; a = XAR_ATTR(a)->next) {
 			xmlTextWriterWriteAttribute(writer, BAD_CAST(XAR_ATTR(a)->key), BAD_CAST(XAR_ATTR(a)->value));
@@ -1418,34 +1418,34 @@ int32_t xar_prop_unserialize(xar_file_t f, xar_prop_t parent, xmlTextReaderPtr r
 			else
 				XAR_PROP(p)->value = strdup(value);
 			if( isname ) {
-				
+
 				// Sanitize the filename
 				const char* unsafe_name = XAR_PROP(p)->value;
 				char* safe_name;
 				xar_is_safe_filename(unsafe_name, &safe_name);
-				
+
 				if (!safe_name) {
 					return -1;
 				}
-				
+
 				if( XAR_FILE(f)->parent ) {
-					
+
 					if (XAR_FILE(f)->fspath) {		/* It's possible that a XAR header may contain multiple name entries. Make sure we don't smash the old one. */
 						free((void*)XAR_FILE(f)->fspath);
 						XAR_FILE(f)->fspath = NULL;
 					}
-					
+
 					asprintf((char **)&XAR_FILE(f)->fspath, "%s/%s", XAR_FILE(XAR_FILE(f)->parent)->fspath, safe_name);
 				} else {
-					
+
 					if (XAR_FILE(f)->fspath) {		/* It's possible that a XAR header may contain multiple name entries. Make sure we don't smash the old one. */
 						free((void*)XAR_FILE(f)->fspath);
 						XAR_FILE(f)->fspath = NULL;
 					}
-					
+
 					XAR_FILE(f)->fspath = strdup(safe_name);
 				}
-				
+
 				free(safe_name);
 			}
 			break;
@@ -1486,7 +1486,7 @@ xar_file_t xar_file_unserialize(xar_t x, xar_file_t parent, xmlTextReaderPtr rea
 			XAR_FILE(ret)->attrs = a;
 		}
 	}
-	
+
 	// recursively unserialize each element nested within this <file>
 	while( xmlTextReaderRead(reader) == 1 ) {
 		type = xmlTextReaderNodeType(reader);
@@ -1501,10 +1501,10 @@ xar_file_t xar_file_unserialize(xar_t x, xar_file_t parent, xmlTextReaderPtr rea
 					xmlHashAddEntry(XAR(x)->link_hash, BAD_CAST(opt), XAR_FILE(ret));
 				}
 			}
-			
+
 			const char* this_file_name = NULL;
 			xar_prop_get(ret, "name", &this_file_name);
-			
+
 			// Now sanity check.
 			xar_file_t iter = NULL;
 			if (parent) {
@@ -1512,18 +1512,18 @@ xar_file_t xar_file_unserialize(xar_t x, xar_file_t parent, xmlTextReaderPtr rea
 			} else {
 				   iter = x->files;
 			}
-			
+
 			while(this_file_name && (iter != NULL)) {
 				if (iter != ret) { // Uninited files are already in their parents list so, check it
 					const char* iter_name_value = NULL;
-	
+
 					if (xar_prop_get(iter, "name", &iter_name_value) == 0) {
 						if (iter_name_value) {
 
 							// Redefinition of a file in the same directory, but is it the SAME file?
 							if (strlen(this_file_name) == strlen(iter_name_value)) {
 								if (strncasecmp(this_file_name, iter_name_value, strlen(this_file_name)) == 0) {
-		
+
 									// Is this the same file?
 									if (xar_file_equals_file(ret, iter) == 0) {
 										// Nope? Bail.
@@ -1533,16 +1533,16 @@ xar_file_t xar_file_unserialize(xar_t x, xar_file_t parent, xmlTextReaderPtr rea
 
 										return NULL;
 									}
-									
+
 								}
 							}
 						}
 					}
 				}
-	
+
 				iter = iter->next;
 			}
-			
+
 			return ret;
 		}
 
@@ -1557,7 +1557,7 @@ xar_file_t xar_file_unserialize(xar_t x, xar_file_t parent, xmlTextReaderPtr rea
 					}
 					return NULL;
 				}
-				
+
 			}
 			else
 			{
@@ -1568,7 +1568,7 @@ xar_file_t xar_file_unserialize(xar_t x, xar_file_t parent, xmlTextReaderPtr rea
 					}
 					return NULL;
 				}
-				
+
 			}
 		}
 	}
@@ -1576,4 +1576,3 @@ xar_file_t xar_file_unserialize(xar_t x, xar_file_t parent, xmlTextReaderPtr rea
 	/* XXX Should never be reached */
 	return ret;
 }
-
